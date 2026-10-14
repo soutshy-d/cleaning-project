@@ -2,15 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- FIX: This specific viewport tag prevents iOS from zooming in -->
+    <!-- FIX: Prevents iOS from zooming in on double-tap or text input -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Cleaning">
-    
-    <link rel="apple-touch-icon" href="icon.jpg">
-    <link rel="icon" type="image/jpeg" href="icon.jpg">
-    
+    <link rel="apple-touch-icon" href="image.jpg">
+    <link rel="icon" type="image/jpeg" href="image.jpg">
     <title>Cleaning Schedule</title>
     <style>
         :root {
@@ -31,7 +29,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* FIX: Prevents double-tap zoom delays on touch devices */
+            /* FIX: Stops the slight delay and double-tap zoom on mobile buttons */
             touch-action: manipulation;
         }
 
@@ -200,6 +198,12 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+        }
+        
+        .room-chip.new-zone {
+            border-style: dashed;
+            border-color: #9ca3af;
+            color: #4b5563;
         }
 
         .task-list {
@@ -398,13 +402,13 @@
         </div>
 
         <div class="room-filter-container" id="roomFilters">
-            <div class="room-chip active" onclick="filterRoom('All')">All Zones</div>
+            <!-- Populated via Javascript -->
         </div>
 
         <div class="task-list" id="taskList"></div>
     </div>
 
-    <!-- Task Modal (Used for both Create & Edit) -->
+    <!-- Task Modal (Create & Edit) -->
     <div class="modal" id="taskModal">
         <div class="modal-content">
             <h2 id="modalTitle">Add New Cleaning Task</h2>
@@ -414,10 +418,14 @@
                 <label>Task Name</label>
                 <input type="text" id="taskNameInput" placeholder="e.g. Wipe windows">
             </div>
+            
             <div class="form-group">
                 <label>Zone / Room</label>
-                <select id="taskRoomSelect" onchange="checkNewRoom(this)"></select>
+                <!-- Datalist allows typing a new zone OR selecting an existing one -->
+                <input type="text" id="taskRoomInput" list="roomOptions" placeholder="Type or select a zone">
+                <datalist id="roomOptions"></datalist>
             </div>
+
             <div class="form-group">
                 <label>Frequency Preset</label>
                 <select id="taskFreqPreset" onchange="applyFreqPreset(this)">
@@ -457,8 +465,71 @@
     </div>
 
     <script>
-        // If it's a completely fresh load without existing storage, this creates the template.
-        let tasks = JSON.parse(localStorage.getItem('cleaning_schedule_tasks')) || [];
+        const initialTasks = [
+            { id: "task_1", name: "Outside appliances", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-23" },
+            { id: "task_2", name: "Wash toothbrush holder", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-29" },
+            { id: "task_3", name: "Washing machine with vinegar", room: "Laundry Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-07" },
+            { id: "task_4", name: "Doors/doorknobs/light switches", room: "Other", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-08-21" },
+            { id: "task_5", name: "Light fixtures", room: "Other", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-05-01" },
+            { id: "task_6", name: "Vacuum carpets", room: "Other", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-09" },
+            { id: "task_7", name: "Inside fridge", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-29" },
+            { id: "task_8", name: "Bedroom set doors", room: "Bedroom", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-10-03" },
+            { id: "task_9", name: "Cat bowls/fountain", room: "Office", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-28" },
+            { id: "task_10", name: "Inside microwave", room: "Kitchen", frequency: 21, frequencyLabel: "Every 3 Weeks", lastCleaned: "2026-09-14" },
+            { id: "task_11", name: "Scrub shower", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-04" },
+            { id: "task_12", name: "Litterboxes", room: "Office", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-20" },
+            { id: "task_13", name: "Toilets", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-04" },
+            { id: "task_14", name: "Clean out freezer/pantry", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-07-23" },
+            { id: "task_15", name: "Bathroom sink", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-10" },
+            { id: "task_16", name: "Vacuum couches", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-13" },
+            { id: "task_17", name: "Bathroom floor", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-12" },
+            { id: "task_18", name: "Clear out fridge", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-07" },
+            { id: "task_19", name: "Spot clean", room: "Living Room", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-21" },
+            { id: "task_20", name: "Bleach kitchen sink", room: "Kitchen", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-26" },
+            { id: "task_21", name: "Kitchen floor", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-10" },
+            { id: "task_22", name: "Dining table", room: "Dining Room", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" },
+            { id: "task_23", name: "Vacuum", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_24", name: "Bathroom mirror", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-26" },
+            { id: "task_25", name: "Bedsheets", room: "Bedroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_26", name: "Stove top/burners", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-12" },
+            { id: "task_27", name: "Dusting", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_28", name: "Mop floors", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-04" },
+            { id: "task_29", name: "Counter doors", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-05" },
+            { id: "task_30", name: "Under stove/counters", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-08-13" },
+            { id: "task_31", name: "Walls/baseboards", room: "Other", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-07-12" },
+            { id: "task_32", name: "Oven", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-14" },
+            { id: "task_33", name: "Curtains", room: "Other", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-10-12" },
+            { id: "task_34", name: "Water filters", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-08-10" },
+            { id: "task_35", name: "Balcony", room: "Other", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-26" },
+            { id: "task_36", name: "Disinfect/wash trashcan", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-10-01" },
+            { id: "task_37", name: "Mattress", room: "Bedroom", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-09-19" },
+            { id: "task_38", name: "Polish surfaces", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-05" },
+            { id: "task_39", name: "Bookcase", room: "Reception", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-23" },
+            { id: "task_40", name: "Drawers/cabinets", room: "Kitchen", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-04-05" },
+            { id: "task_41", name: "Drawers/shelves", room: "Bathroom", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-04-26" },
+            { id: "task_42", name: "Fan/vent filters", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-08-31" },
+            { id: "task_43", name: "Drawers", room: "Bedroom", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-21" },
+            { id: "task_44", name: "Shoes", room: "Reception", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-06-22" },
+            { id: "task_45", name: "Drawers", room: "Living Room", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2025-11-02" },
+            { id: "task_46", name: "Pull sofa out", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-16" },
+            { id: "task_47", name: "Wash carpets", room: "Other", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-05-07" },
+            { id: "task_48", name: "Clean sink", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" },
+            { id: "task_49", name: "Wash cushions", room: "Other", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-07-13" },
+            { id: "task_50", name: "Deep-clean fridge/freezer", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-28" },
+            { id: "task_51", name: "Windows", room: "Other", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-02" },
+            { id: "task_52", name: "TV/PS5", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-14" },
+            { id: "task_53", name: "On-top of upboards", room: "Kitchen", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-07-16" },
+            { id: "task_54", name: "Walls", room: "Bathroom", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-09-30" },
+            { id: "task_55", name: "Towels", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" }
+        ];
+
+        // Retrieve from GitHub's localStorage or default to the 55 tasks
+        let tasks = JSON.parse(localStorage.getItem('cleaning_schedule_tasks'));
+        if (!tasks || tasks.length === 0) {
+            tasks = initialTasks;
+            saveToStorage();
+        }
+        
         let currentRoom = 'All';
         let currentStatusFilter = 'All';
 
@@ -473,14 +544,23 @@
         function renderRooms() {
             const container = document.getElementById('roomFilters');
             const rooms = ['All', ...getRooms()];
+            
+            // Build the room chips + the New Zone button at the end
             container.innerHTML = rooms.map(room => `
                 <div class="room-chip ${currentRoom === room ? 'active' : ''}" onclick="filterRoom('${room}')">${room}</div>
-            `).join('');
+            `).join('') + `<div class="room-chip new-zone" onclick="createNewZone()">+ New Zone</div>`;
 
-            const roomSelect = document.getElementById('taskRoomSelect');
-            const roomList = getRooms();
-            roomSelect.innerHTML = roomList.map(r => `<option value="${r}">${r}</option>`).join('') + 
-                                   `<option value="__new__">➕ Create New Room...</option>`;
+            // Update the datalist for the text input
+            const datalist = document.getElementById('roomOptions');
+            datalist.innerHTML = getRooms().map(r => `<option value="${r}">`).join('');
+        }
+
+        function createNewZone() {
+            const zoneName = prompt("Enter a name for the new zone:");
+            if (zoneName && zoneName.trim()) {
+                openModal();
+                document.getElementById('taskRoomInput').value = zoneName.trim();
+            }
         }
 
         function filterRoom(room) {
@@ -597,7 +677,10 @@
         function cleanTask(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
-                task.lastCleaned = new Date().toISOString().split('T')[0];
+                // Adjust to local timezone date to prevent off-by-one day bugs
+                const localDate = new Date();
+                const offset = localDate.getTimezoneOffset() * 60000;
+                task.lastCleaned = (new Date(localDate - offset)).toISOString().split('T')[0];
                 saveToStorage();
                 renderTasks();
             }
@@ -609,12 +692,18 @@
             const title = document.getElementById('modalTitle');
             const deleteBtn = document.getElementById('deleteTaskBtn');
             
+            // Generate today's date adjusted to local timezone
+            const localDate = new Date();
+            const offset = localDate.getTimezoneOffset() * 60000;
+            const todayStr = (new Date(localDate - offset)).toISOString().split('T')[0];
+
             // Reset fields
             document.getElementById('editTaskId').value = '';
             document.getElementById('taskNameInput').value = '';
+            document.getElementById('taskRoomInput').value = currentRoom === 'All' ? '' : currentRoom;
             document.getElementById('taskFreqDaysInput').value = '30';
             document.getElementById('taskFreqPreset').value = '30';
-            document.getElementById('taskLastCleanedInput').value = new Date().toISOString().split('T')[0];
+            document.getElementById('taskLastCleanedInput').value = todayStr;
             
             if (taskId) {
                 // Edit Mode
@@ -623,11 +712,10 @@
                     title.innerText = "Edit Task";
                     document.getElementById('editTaskId').value = task.id;
                     document.getElementById('taskNameInput').value = task.name;
-                    document.getElementById('taskRoomSelect').value = task.room;
+                    document.getElementById('taskRoomInput').value = task.room;
                     document.getElementById('taskFreqDaysInput').value = task.frequency;
                     document.getElementById('taskLastCleanedInput').value = task.lastCleaned;
                     
-                    // Try to map to preset, else custom
                     const presetObj = document.querySelector(`#taskFreqPreset option[value="${task.frequency}"]`);
                     if (presetObj) {
                         document.getElementById('taskFreqPreset').value = task.frequency;
@@ -647,22 +735,6 @@
 
         function closeModal() {
             document.getElementById('taskModal').classList.remove('active');
-        }
-
-        function checkNewRoom(selectEl) {
-            if (selectEl.value === '__new__') {
-                const newRoomName = prompt('Enter new room / zone name:');
-                if (newRoomName && newRoomName.trim()) {
-                    const trimmed = newRoomName.trim();
-                    const option = document.createElement('option');
-                    option.value = trimmed;
-                    option.textContent = trimmed;
-                    selectEl.insertBefore(option, selectEl.lastElementChild);
-                    selectEl.value = trimmed;
-                } else {
-                    selectEl.selectedIndex = 0;
-                }
-            }
         }
 
         function applyFreqPreset(selectEl) {
@@ -696,9 +768,9 @@
         function saveTask() {
             const editId = document.getElementById('editTaskId').value;
             const name = document.getElementById('taskNameInput').value.trim();
-            const room = document.getElementById('taskRoomSelect').value;
+            const room = document.getElementById('taskRoomInput').value.trim();
             const frequency = parseInt(document.getElementById('taskFreqDaysInput').value) || 30;
-            const lastCleaned = document.getElementById('taskLastCleanedInput').value || new Date().toISOString().split('T')[0];
+            const lastCleaned = document.getElementById('taskLastCleanedInput').value;
             
             const presetEl = document.getElementById('taskFreqPreset');
             let frequencyLabel = presetEl.options[presetEl.selectedIndex].text.split(' (')[0];
@@ -707,7 +779,7 @@
             }
 
             if (!name) { alert('Please enter a task name.'); return; }
-            if (!room || room === '__new__') { alert('Please select a valid zone.'); return; }
+            if (!room) { alert('Please enter or select a zone.'); return; }
 
             if (editId) {
                 // Update existing
