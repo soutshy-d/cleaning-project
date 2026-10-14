@@ -81,6 +81,7 @@
         .btn-secondary {
             background-color: #e5e7eb;
             color: var(--text-main);
+            padding: 8px 8px;
         }
         .btn-secondary:hover { background-color: #d1d5db; }
         
@@ -701,7 +702,7 @@
                             <div class="progress-bar" style="width: ${percentage}%; background-color: ${color};"></div>
                         </div>
                         <div class="task-actions">
-                            <button class="btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" onclick="openModal('${task.id}')">✏️ Edit</button>
+                            <button class="btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" onclick="openModal('${task.id}')">Edit</button>
                             <button class="btn-clean" onclick="cleanTask('${task.id}')">✨ Clean</button>
                         </div>
                     </div>
