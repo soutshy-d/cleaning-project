@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Cleaning">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleaning Schedule</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 90px;
+        }
+
+        header {
+            background: #ffffff;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 8px 14px;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        /* Status Summary Cards */
+        .status-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .summary-card.active {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .summary-card.fresh { border-left: 5px solid var(--green); }
+        .summary-card.due { border-left: 5px solid var(--yellow); }
+        .summary-card.overdue { border-left: 5px solid var(--red); }
+
+        .summary-count {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Controls Bar (Search & Sort) */
+        .controls-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .sort-select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: white;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        /* Room Filter Horizontal Scroll */
+        .room-filter-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            scrollbar-width: none;
+        }
+
+        .room-filter-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .room-chip {
+            padding: 8px 16px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .room-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Task Cards */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .task-room {
+            font-size: 0.75rem;
+            background: #f3f4f6;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 50%;
+            border-radius: 4px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-clean {
+            background-color: var(--green);
+            color: white;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .btn-clean:hover {
+            opacity: 0.9;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .number-stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .number-stepper button {
+            background: #e5e7eb;
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .number-stepper input {
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✨ Cleaning Schedule</h1>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="openModal()">+ Add Task</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Status Summary Cards -->
+        <div class="status-summary">
+            <div class="summary-card fresh" id="cardFresh" onclick="filterStatus('fresh')">
+                <div class="summary-label">Fresh</div>
+                <div class="summary-count" id="countFresh">0</div>
+            </div>
+            <div class="summary-card due" id="cardDue" onclick="filterStatus('due')">
+                <div class="summary-label">Due Soon</div>
+                <div class="summary-count" id="countDue">0</div>
+            </div>
+            <div class="summary-card overdue" id="cardOverdue" onclick="filterStatus('overdue')">
+                <div class="summary-label">Overdue</div>
+                <div class="summary-count" id="countOverdue">0</div>
+            </div>
+        </div>
+
+        <!-- Controls Bar: Search & Sort -->
+        <div class="controls-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search tasks..." oninput="renderTasks()">
+            <select id="sortSelect" class="sort-select" onchange="renderTasks()">
+                <option value="urgency">Sort by: Urgency</option>
+                <option value="name">Sort by: Name</option>
+                <option value="room">Sort by: Zone</option>
+                <option value="frequency">Sort by: Frequency</option>
+            </select>
+        </div>
+
+        <!-- Room Filters -->
+        <div class="room-filter-container" id="roomFilters">
+            <div class="room-chip active" onclick="filterRoom('All')">All Zones</div>
+        </div>
+
+        <!-- Task List -->
+        <div class="task-list" id="taskList"></div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <h2>Add New Cleaning Task</h2>
+            <div class="form-group">
+                <label>Task Name</label>
+                <input type="text" id="taskNameInput" placeholder="e.g. Wipe windows">
+            </div>
+            <div class="form-group">
+                <label>Zone / Room</label>
+                <select id="taskRoomSelect" onchange="checkNewRoom(this)">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Frequency Preset</label>
+                <select id="taskFreqPreset" onchange="applyFreqPreset(this)">
+                    <option value="7">Weekly (7 days)</option>
+                    <option value="14">Every 2 Weeks (14 days)</option>
+                    <option value="21">Every 3 Weeks (21 days)</option>
+                    <option value="30" selected>Monthly (30 days)</option>
+                    <option value="60">Every 2 Months (60 days)</option>
+                    <option value="90">Quarterly (90 days)</option>
+                    <option value="180">Every 6 Months (180 days)</option>
+                    <option value="365">Annually (365 days)</option>
+                    <option value="custom">Custom...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Frequency (Days)</label>
+                <div class="number-stepper">
+                    <button type="button" onclick="adjustDays(-1)">-</button>
+                    <input type="number" id="taskFreqDaysInput" value="30" min="1">
+                    <button type="button" onclick="adjustDays(1)">+</button>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveTask()">Save Task</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const initialTasks = [
+            { id: "task_1", name: "Outside appliances", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-23" },
+            { id: "task_2", name: "Wash toothbrush holder", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-29" },
+            { id: "task_3", name: "Washing machine with vinegar", room: "Laundry Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-07" },
+            { id: "task_4", name: "Doors/doorknobs/light switches", room: "Other", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-08-21" },
+            { id: "task_5", name: "Light fixtures", room: "Other", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-05-01" },
+            { id: "task_6", name: "Vacuum carpets", room: "Other", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-09" },
+            { id: "task_7", name: "Inside fridge", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-29" },
+            { id: "task_8", name: "Bedroom set doors", room: "Bedroom", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-10-03" },
+            { id: "task_9", name: "Cat bowls/fountain", room: "Office", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-28" },
+            { id: "task_10", name: "Inside microwave", room: "Kitchen", frequency: 21, frequencyLabel: "Every 3 Weeks", lastCleaned: "2026-09-14" },
+            { id: "task_11", name: "Scrub shower", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-04" },
+            { id: "task_12", name: "Litterboxes", room: "Office", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-20" },
+            { id: "task_13", name: "Toilets", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-04" },
+            { id: "task_14", name: "Clean out freezer/pantry", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-07-23" },
+            { id: "task_15", name: "Bathroom sink", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-10" },
+            { id: "task_16", name: "Vacuum couches", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-13" },
+            { id: "task_17", name: "Bathroom floor", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-12" },
+            { id: "task_18", name: "Clear out fridge", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-07" },
+            { id: "task_19", name: "Spot clean", room: "Living Room", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-21" },
+            { id: "task_20", name: "Bleach kitchen sink", room: "Kitchen", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-26" },
+            { id: "task_21", name: "Kitchen floor", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-10" },
+            { id: "task_22", name: "Dining table", room: "Dining Room", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" },
+            { id: "task_23", name: "Vacuum", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_24", name: "Bathroom mirror", room: "Bathroom", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-09-26" },
+            { id: "task_25", name: "Bedsheets", room: "Bedroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_26", name: "Stove top/burners", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-12" },
+            { id: "task_27", name: "Dusting", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-06" },
+            { id: "task_28", name: "Mop floors", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-04" },
+            { id: "task_29", name: "Counter doors", room: "Kitchen", frequency: 14, frequencyLabel: "Every 2 Weeks", lastCleaned: "2026-10-05" },
+            { id: "task_30", name: "Under stove/counters", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-08-13" },
+            { id: "task_31", name: "Walls/baseboards", room: "Other", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-07-12" },
+            { id: "task_32", name: "Oven", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-09-14" },
+            { id: "task_33", name: "Curtains", room: "Other", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-10-12" },
+            { id: "task_34", name: "Water filters", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-08-10" },
+            { id: "task_35", name: "Balcony", room: "Other", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-26" },
+            { id: "task_36", name: "Disinfect/wash trashcan", room: "Kitchen", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-10-01" },
+            { id: "task_37", name: "Mattress", room: "Bedroom", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-09-19" },
+            { id: "task_38", name: "Polish surfaces", room: "Other", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-05" },
+            { id: "task_39", name: "Bookcase", room: "Reception", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-23" },
+            { id: "task_40", name: "Drawers/cabinets", room: "Kitchen", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-04-05" },
+            { id: "task_41", name: "Drawers/shelves", room: "Bathroom", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-04-26" },
+            { id: "task_42", name: "Fan/vent filters", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-08-31" },
+            { id: "task_43", name: "Drawers", room: "Bedroom", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-21" },
+            { id: "task_44", name: "Shoes", room: "Reception", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-06-22" },
+            { id: "task_45", name: "Drawers", room: "Living Room", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2025-11-02" },
+            { id: "task_46", name: "Pull sofa out", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-09-16" },
+            { id: "task_47", name: "Wash carpets", room: "Other", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-05-07" },
+            { id: "task_48", name: "Clean sink", room: "Kitchen", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" },
+            { id: "task_49", name: "Wash cushions", room: "Other", frequency: 180, frequencyLabel: "Every 6 Months", lastCleaned: "2026-07-13" },
+            { id: "task_50", name: "Deep-clean fridge/freezer", room: "Kitchen", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-28" },
+            { id: "task_51", name: "Windows", room: "Other", frequency: 90, frequencyLabel: "Quarterly", lastCleaned: "2026-06-02" },
+            { id: "task_52", name: "TV/PS5", room: "Living Room", frequency: 30, frequencyLabel: "Monthly", lastCleaned: "2026-10-14" },
+            { id: "task_53", name: "On-top of upboards", room: "Kitchen", frequency: 365, frequencyLabel: "Annually", lastCleaned: "2026-07-16" },
+            { id: "task_54", name: "Walls", room: "Bathroom", frequency: 60, frequencyLabel: "Every 2 Months", lastCleaned: "2026-09-30" },
+            { id: "task_55", name: "Towels", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" }
+        ];
+
+        let tasks = JSON.parse(localStorage.getItem('cleaning_schedule_tasks')) || initialTasks;
+        let currentRoom = 'All';
+        let currentStatusFilter = 'All';
+
+        function saveToStorage() {
+            localStorage.setItem('cleaning_schedule_tasks', JSON.stringify(tasks));
+        }
+
+        function getRooms() {
+            return [...new Set(tasks.map(t => t.room))].sort();
+        }
+
+        function renderRooms() {
+            const container = document.getElementById('roomFilters');
+            const rooms = ['All', ...getRooms()];
+            
+            container.innerHTML = rooms.map(room => `
+                <div class="room-chip ${currentRoom === room ? 'active' : ''}" onclick="filterRoom('${room}')">
+                    ${room}
+                </div>
+            `).join('');
+
+            const roomSelect = document.getElementById('taskRoomSelect');
+            const roomList = getRooms();
+            roomSelect.innerHTML = roomList.map(r => `<option value="${r}">${r}</option>`).join('') + 
+                                   `<option value="__new__">➕ Create New Room...</option>`;
+        }
+
+        function filterRoom(room) {
+            currentRoom = room;
+            currentStatusFilter = 'All';
+            updateSummaryCardsActiveState();
+            renderRooms();
+            renderTasks();
+        }
+
+        function filterStatus(status) {
+            if (currentStatusFilter === status) {
+                currentStatusFilter = 'All';
+            } else {
+                currentStatusFilter = status;
+                currentRoom = 'All';
+            }
+            updateSummaryCardsActiveState();
+            renderRooms();
+            renderTasks();
+        }
+
+        function updateSummaryCardsActiveState() {
+            document.getElementById('cardFresh').classList.toggle('active', currentStatusFilter === 'fresh');
+            document.getElementById('cardDue').classList.toggle('active', currentStatusFilter === 'due');
+            document.getElementById('cardOverdue').classList.toggle('active', currentStatusFilter === 'overdue');
+        }
+
+        function calculateUrgency(lastCleaned, frequency) {
+            const last = new Date(lastCleaned);
+            const today = new Date();
+            const diffTime = today - last;
+            const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+            
+            let percentage = (diffDays / frequency) * 100;
+            percentage = Math.min(Math.max(percentage, 0), 100);
+
+            let status = 'fresh';
+            let color = 'var(--green)';
+            if (percentage > 75) {
+                status = 'overdue';
+                color = 'var(--red)';
+            } else if (percentage > 40) {
+                status = 'due';
+                color = 'var(--yellow)';
+            }
+
+            return { diffDays, percentage, color, status };
+        }
+
+        function updateSummaryCounts() {
+            let fresh = 0, due = 0, overdue = 0;
+            tasks.forEach(t => {
+                const u = calculateUrgency(t.lastCleaned, t.frequency);
+                if (u.status === 'fresh') fresh++;
+                else if (u.status === 'due') due++;
+                else if (u.status === 'overdue') overdue++;
+            });
+            document.getElementById('countFresh').innerText = fresh;
+            document.getElementById('countDue').innerText = due;
+            document.getElementById('countOverdue').innerText = overdue;
+        }
+
+        function renderTasks() {
+            updateSummaryCounts();
+            const container = document.getElementById('taskList');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy = document.getElementById('sortSelect').value;
+
+            let filtered = tasks.filter(task => {
+                const matchesRoom = currentRoom === 'All' || task.room === currentRoom;
+                const matchesSearch = task.name.toLowerCase().includes(searchQuery) || task.room.toLowerCase().includes(searchQuery);
+                
+                let matchesStatus = true;
+                if (currentStatusFilter !== 'All') {
+                    const u = calculateUrgency(task.lastCleaned, task.frequency);
+                    matchesStatus = u.status === currentStatusFilter;
+                }
+
+                return matchesRoom && matchesSearch && matchesStatus;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'urgency') {
+                    const uA = calculateUrgency(a.lastCleaned, a.frequency).percentage;
+                    const uB = calculateUrgency(b.lastCleaned, b.frequency).percentage;
+                    return uB - uA;
+                } else if (sortBy === 'name') {
+                    return a.name.localeCompare(b.name);
+                } else if (sortBy === 'room') {
+                    return a.room.localeCompare(b.room) || a.name.localeCompare(b.name);
+                } else if (sortBy === 'frequency') {
+                    return a.frequency - b.frequency;
+                }
+                return 0;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state">No cleaning tasks found.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(task => {
+                const { diffDays, percentage, color } = calculateUrgency(task.lastCleaned, task.frequency);
+                const statusText = diffDays === 0 ? 'Cleaned today' : `${diffDays} days ago (${task.frequencyLabel || task.frequency + ' days'})`;
+
+                return `
+                    <div class="task-card">
+                        <div class="task-header">
+                            <div>
+                                <div class="task-title">${task.name}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${statusText}</div>
+                            </div>
+                            <span class="task-room">${task.room}</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${percentage}%; background-color: ${color};"></div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn-clean" onclick="cleanTask('${task.id}')">✨ Clean</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function cleanTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.lastCleaned = new Date().toISOString().split('T')[0];
+                saveToStorage();
+                renderTasks();
+            }
+        }
+
+        function openModal() {
+            renderRooms();
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function checkNewRoom(selectEl) {
+            if (selectEl.value === '__new__') {
+                const newRoomName = prompt('Enter new room / zone name:');
+                if (newRoomName && newRoomName.trim()) {
+                    const trimmed = newRoomName.trim();
+                    const option = document.createElement('option');
+                    option.value = trimmed;
+                    option.textContent = trimmed;
+                    selectEl.insertBefore(option, selectEl.lastElementChild);
+                    selectEl.value = trimmed;
+                } else {
+                    selectEl.selectedIndex = 0;
+                }
+            }
+        }
+
+        function applyFreqPreset(selectEl) {
+            const val = selectEl.value;
+            if (val !== 'custom') {
+                document.getElementById('taskFreqDaysInput').value = val;
+            }
+        }
+
+        function adjustDays(amount) {
+            const input = document.getElementById('taskFreqDaysInput');
+            let current = parseInt(input.value) || 30;
+            current = Math.max(1, current + amount);
+            input.value = current;
+            document.getElementById('taskFreqPreset').value = 'custom';
+        }
+
+        function saveTask() {
+            const name = document.getElementById('taskNameInput').value.trim();
+            const room = document.getElementById('taskRoomSelect').value;
+            const frequency = parseInt(document.getElementById('taskFreqDaysInput').value) || 30;
+            
+            const presetEl = document.getElementById('taskFreqPreset');
+            let frequencyLabel = presetEl.options[presetEl.selectedIndex].text.split(' (')[0];
+            if (presetEl.value === 'custom') {
+                frequencyLabel = `Every ${frequency} days`;
+            }
+
+            if (!name) {
+                alert('Please enter a task name.');
+                return;
+            }
+
+            if (!room || room === '__new__') {
+                alert('Please select a valid zone.');
+                return;
+            }
+
+            const newTask = {
+                id: 'task_' + Date.now(),
+                name,
+                room,
+                frequency,
+                frequencyLabel,
+                lastCleaned: new Date().toISOString().split('T')[0]
+            };
+
+            tasks.push(newTask);
+            saveToStorage();
+            closeModal();
+            renderRooms();
+            renderTasks();
+
+            document.getElementById('taskNameInput').value = '';
+            document.getElementById('taskFreqDaysInput').value = '30';
+            document.getElementById('taskFreqPreset').value = '30';
+        }
+
+        renderRooms();
+        renderTasks();
+    </script>
+</body>
+</html>
