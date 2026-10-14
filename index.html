@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- FIX: Prevents iOS from zooming in on double-tap or text input -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Cleaning">
-    <link rel="apple-touch-icon" href="image.jpg">
-    <link rel="icon" type="image/jpeg" href="image.jpg">
+    <link rel="apple-touch-icon" href="icon.jpg">
+    <link rel="icon" type="image/jpeg" href="icon.jpg">
     <title>Cleaning Schedule</title>
     <style>
         :root {
@@ -29,7 +28,6 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* FIX: Stops the slight delay and double-tap zoom on mobile buttons */
             touch-action: manipulation;
         }
 
@@ -76,19 +74,13 @@
             background-color: var(--primary);
             color: white;
         }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
 
         .btn-secondary {
             background-color: #e5e7eb;
             color: var(--text-main);
         }
-
-        .btn-secondary:hover {
-            background-color: #d1d5db;
-        }
+        .btn-secondary:hover { background-color: #d1d5db; }
         
         .btn-danger {
             background-color: #fee2e2;
@@ -132,7 +124,6 @@
             font-weight: 700;
             margin-top: 4px;
         }
-
         .summary-label {
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -147,18 +138,7 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
-
-        .search-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.9rem;
-            background: white;
-        }
-
-        .sort-select {
+        .search-input, .sort-select {
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -167,6 +147,7 @@
             color: var(--text-main);
             font-weight: 500;
         }
+        .search-input { flex: 1; min-width: 200px; }
 
         .room-filter-container {
             display: flex;
@@ -176,10 +157,7 @@
             margin-bottom: 16px;
             scrollbar-width: none;
         }
-
-        .room-filter-container::-webkit-scrollbar {
-            display: none;
-        }
+        .room-filter-container::-webkit-scrollbar { display: none; }
 
         .room-chip {
             padding: 8px 16px;
@@ -193,25 +171,18 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .room-chip.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
         }
-        
         .room-chip.new-zone {
             border-style: dashed;
             border-color: #9ca3af;
             color: #4b5563;
         }
 
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        .task-list { display: flex; flex-direction: column; gap: 12px; }
         .task-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -223,18 +194,8 @@
             gap: 12px;
         }
 
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .task-title {
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--text-main);
-        }
-
+        .task-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .task-title { font-weight: 600; font-size: 1rem; color: var(--text-main); }
         .task-room {
             font-size: 0.75rem;
             background: #f3f4f6;
@@ -246,53 +207,24 @@
             letter-spacing: 0.5px;
         }
 
-        .progress-bar-container {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            width: 100%;
-        }
+        .progress-bar-container { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; width: 100%; }
+        .progress-bar { height: 100%; width: 50%; border-radius: 4px; transition: width 0.3s ease, background-color 0.3s ease; }
+        
+        .task-actions { display: flex; justify-content: flex-end; gap: 8px; }
+        .btn-clean { background-color: var(--green); color: white; padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; }
 
-        .progress-bar {
-            height: 100%;
-            width: 50%;
-            border-radius: 4px;
-            transition: width 0.3s ease, background-color 0.3s ease;
-        }
-
-        .task-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .btn-clean {
-            background-color: var(--green);
-            color: white;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            border-radius: 6px;
-        }
-
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
             z-index: 1000;
             padding: 16px;
         }
-
-        .modal.active {
-            display: flex;
-        }
-
+        .modal.active { display: flex; }
         .modal-content {
             background: white;
             border-radius: 16px;
@@ -306,24 +238,10 @@
             max-height: 90vh;
             overflow-y: auto;
         }
+        .modal-content h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
 
-        .modal-content h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
         .form-group input, .form-group select {
             padding: 10px;
             border: 1px solid var(--border);
@@ -332,38 +250,27 @@
             background: white;
         }
 
-        .number-stepper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .number-stepper { display: flex; align-items: center; gap: 8px; }
         .number-stepper button {
-            background: #e5e7eb;
-            color: var(--text-main);
-            padding: 10px 14px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
+            background: #e5e7eb; color: var(--text-main); padding: 10px 14px; font-size: 1rem; font-weight: bold; border-radius: 8px;
         }
+        .number-stepper input { text-align: center; flex: 1; }
 
-        .number-stepper input {
-            text-align: center;
-            flex: 1;
-        }
+        .modal-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 
-        .modal-buttons {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
+        /* Settings Zones List */
+        .zone-manage-list { display: flex; flex-direction: column; gap: 8px; }
+        .zone-manage-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f9fafb; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
+        .zone-manage-actions { display: flex; gap: 6px; }
+        .zone-manage-actions button {
+            background: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; cursor: pointer; color: var(--text-main); font-weight: bold;
         }
+        .zone-manage-actions button:disabled { opacity: 0.3; cursor: not-allowed; }
+        hr { border: 0; border-top: 1px solid var(--border); margin: 8px 0; }
     </style>
 </head>
 <body>
@@ -371,6 +278,8 @@
     <header>
         <h1>✨ Cleaning Schedule</h1>
         <div class="header-actions">
+            <!-- New Settings Button -->
+            <button class="btn-secondary" onclick="openSettings()">⚙️ Settings</button>
             <button class="btn-primary" onclick="openModal()">+ Add Task</button>
         </div>
     </header>
@@ -421,9 +330,8 @@
             
             <div class="form-group">
                 <label>Zone / Room</label>
-                <!-- Datalist allows typing a new zone OR selecting an existing one -->
-                <input type="text" id="taskRoomInput" list="roomOptions" placeholder="Type or select a zone">
-                <datalist id="roomOptions"></datalist>
+                <!-- Reverted back to purely a standard Select Dropdown -->
+                <select id="taskRoomSelect"></select>
             </div>
 
             <div class="form-group">
@@ -454,12 +362,42 @@
             </div>
             
             <div class="modal-buttons">
-                <!-- Delete button (Only shows when editing) -->
                 <button class="btn-danger" id="deleteTaskBtn" style="display: none;" onclick="deleteTask()">Delete</button>
                 <div style="display: flex; gap: 10px; margin-left: auto;">
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
                     <button class="btn-primary" onclick="saveTask()">Save Task</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings & Manage Zones Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>⚙️ Settings & Zones</h2>
+            
+            <div class="form-group">
+                <label>Organize Zones</label>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Use the arrows to set how zones appear in your scroll bar.</p>
+                <div class="zone-manage-list" id="zoneManageList">
+                    <!-- Populated via Javascript -->
+                </div>
+            </div>
+            
+            <hr>
+
+            <div class="form-group">
+                <label>Data Backup & Restore</label>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Export a file to keep your progress safe, or import one to restore it.</p>
+                <div style="display: flex; gap: 10px; margin-top: 6px;">
+                    <button class="btn-secondary" style="flex: 1;" onclick="exportData()">⬇️ Export Backup</button>
+                    <button class="btn-primary" style="flex: 1;" onclick="document.getElementById('importFile').click()">⬆️ Import Backup</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="justify-content: flex-end;">
+                <button class="btn-secondary" onclick="closeSettings()">Close</button>
             </div>
         </div>
     </div>
@@ -523,43 +461,52 @@
             { id: "task_55", name: "Towels", room: "Bathroom", frequency: 7, frequencyLabel: "Weekly", lastCleaned: "2026-10-11" }
         ];
 
-        // Retrieve from GitHub's localStorage or default to the 55 tasks
+        // Core Storage Setup
         let tasks = JSON.parse(localStorage.getItem('cleaning_schedule_tasks'));
         if (!tasks || tasks.length === 0) {
             tasks = initialTasks;
-            saveToStorage();
+            localStorage.setItem('cleaning_schedule_tasks', JSON.stringify(tasks));
         }
         
+        let initialRooms = ["Kitchen", "Bathroom", "Bedroom", "Living Room", "Dining Room", "Office", "Reception", "Laundry Room", "Other"];
+        let savedRooms = JSON.parse(localStorage.getItem('cleaning_schedule_rooms'));
+        if (!savedRooms || savedRooms.length === 0) {
+            savedRooms = initialRooms;
+            localStorage.setItem('cleaning_schedule_rooms', JSON.stringify(savedRooms));
+        }
+
         let currentRoom = 'All';
         let currentStatusFilter = 'All';
 
         function saveToStorage() {
             localStorage.setItem('cleaning_schedule_tasks', JSON.stringify(tasks));
         }
-
-        function getRooms() {
-            return [...new Set(tasks.map(t => t.room))].sort();
+        function saveRooms() {
+            localStorage.setItem('cleaning_schedule_rooms', JSON.stringify(savedRooms));
         }
+
+        // ---------- ROOMS & ZONES LOGIC ----------
 
         function renderRooms() {
             const container = document.getElementById('roomFilters');
-            const rooms = ['All', ...getRooms()];
+            const rooms = ['All', ...savedRooms];
             
-            // Build the room chips + the New Zone button at the end
+            // Build the top scrollable chips
             container.innerHTML = rooms.map(room => `
                 <div class="room-chip ${currentRoom === room ? 'active' : ''}" onclick="filterRoom('${room}')">${room}</div>
             `).join('') + `<div class="room-chip new-zone" onclick="createNewZone()">+ New Zone</div>`;
 
-            // Update the datalist for the text input
-            const datalist = document.getElementById('roomOptions');
-            datalist.innerHTML = getRooms().map(r => `<option value="${r}">`).join('');
+            // Update Add Task dropdown
+            const roomSelect = document.getElementById('taskRoomSelect');
+            roomSelect.innerHTML = savedRooms.map(r => `<option value="${r}">${r}</option>`).join('');
         }
 
         function createNewZone() {
             const zoneName = prompt("Enter a name for the new zone:");
             if (zoneName && zoneName.trim()) {
-                openModal();
-                document.getElementById('taskRoomInput').value = zoneName.trim();
+                savedRooms.push(zoneName.trim());
+                saveRooms();
+                renderRooms();
             }
         }
 
@@ -571,13 +518,99 @@
             renderTasks();
         }
 
-        function filterStatus(status) {
-            if (currentStatusFilter === status) {
-                currentStatusFilter = 'All';
-            } else {
-                currentStatusFilter = status;
-                currentRoom = 'All';
+        // ---------- SETTINGS MODAL ----------
+
+        function openSettings() {
+            renderSettingsZones();
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function renderSettingsZones() {
+            const list = document.getElementById('zoneManageList');
+            list.innerHTML = savedRooms.map((room, index) => `
+                <div class="zone-manage-item">
+                    <span>${room}</span>
+                    <div class="zone-manage-actions">
+                        <button type="button" onclick="moveZone(${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button type="button" onclick="moveZone(${index}, 1)" ${index === savedRooms.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button type="button" onclick="deleteZone(${index})" style="color:var(--red);">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function moveZone(index, direction) {
+            if (direction === -1 && index > 0) {
+                let temp = savedRooms[index];
+                savedRooms[index] = savedRooms[index-1];
+                savedRooms[index-1] = temp;
+            } else if (direction === 1 && index < savedRooms.length - 1) {
+                let temp = savedRooms[index];
+                savedRooms[index] = savedRooms[index+1];
+                savedRooms[index+1] = temp;
             }
+            saveRooms();
+            renderSettingsZones();
+            renderRooms();
+        }
+
+        function deleteZone(index) {
+            if(confirm(`Remove "${savedRooms[index]}" from your zones list?\n(Tasks already in this zone won't be deleted)`)) {
+                savedRooms.splice(index, 1);
+                saveRooms();
+                renderSettingsZones();
+                renderRooms();
+            }
+        }
+
+        // ---------- BACKUP & RESTORE ----------
+
+        function exportData() {
+            const data = { tasks: tasks, rooms: savedRooms };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Cleaning_App_Backup.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.tasks) {
+                        tasks = data.tasks;
+                        savedRooms = data.rooms || [...new Set(tasks.map(t => t.room))];
+                        saveToStorage();
+                        saveRooms();
+                        renderRooms();
+                        renderTasks();
+                        alert("Backup imported successfully! Your tasks have been restored.");
+                        closeSettings();
+                    }
+                } catch(err) {
+                    alert("Invalid backup file. Please make sure it's the correct JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // ---------- FILTERING & TASKS ----------
+
+        function filterStatus(status) {
+            if (currentStatusFilter === status) currentStatusFilter = 'All';
+            else { currentStatusFilter = status; currentRoom = 'All'; }
             updateSummaryCardsActiveState();
             renderRooms();
             renderTasks();
@@ -600,11 +633,8 @@
 
             let status = 'fresh';
             let color = 'var(--green)';
-            if (percentage > 75) {
-                status = 'overdue'; color = 'var(--red)';
-            } else if (percentage > 40) {
-                status = 'due'; color = 'var(--yellow)';
-            }
+            if (percentage > 75) { status = 'overdue'; color = 'var(--red)'; } 
+            else if (percentage > 40) { status = 'due'; color = 'var(--yellow)'; }
 
             return { diffDays, percentage, color, status };
         }
@@ -636,10 +666,14 @@
             });
 
             filtered.sort((a, b) => {
-                if (sortBy === 'urgency') {
-                    return calculateUrgency(b.lastCleaned, b.frequency).percentage - calculateUrgency(a.lastCleaned, a.frequency).percentage;
-                } else if (sortBy === 'name') return a.name.localeCompare(b.name);
-                else if (sortBy === 'room') return a.room.localeCompare(b.room) || a.name.localeCompare(b.name);
+                if (sortBy === 'urgency') return calculateUrgency(b.lastCleaned, b.frequency).percentage - calculateUrgency(a.lastCleaned, a.frequency).percentage;
+                else if (sortBy === 'name') return a.name.localeCompare(b.name);
+                else if (sortBy === 'room') {
+                    // Sort by the custom room order!
+                    const roomA = savedRooms.indexOf(a.room);
+                    const roomB = savedRooms.indexOf(b.room);
+                    return (roomA === -1 ? 999 : roomA) - (roomB === -1 ? 999 : roomB) || a.name.localeCompare(b.name);
+                }
                 else if (sortBy === 'frequency') return a.frequency - b.frequency;
                 return 0;
             });
@@ -677,7 +711,6 @@
         function cleanTask(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
-                // Adjust to local timezone date to prevent off-by-one day bugs
                 const localDate = new Date();
                 const offset = localDate.getTimezoneOffset() * 60000;
                 task.lastCleaned = (new Date(localDate - offset)).toISOString().split('T')[0];
@@ -686,33 +719,32 @@
             }
         }
 
+        // ---------- TASK MODAL (ADD / EDIT) ----------
+
         function openModal(taskId = null) {
             renderRooms();
             const modal = document.getElementById('taskModal');
             const title = document.getElementById('modalTitle');
             const deleteBtn = document.getElementById('deleteTaskBtn');
             
-            // Generate today's date adjusted to local timezone
             const localDate = new Date();
             const offset = localDate.getTimezoneOffset() * 60000;
             const todayStr = (new Date(localDate - offset)).toISOString().split('T')[0];
 
-            // Reset fields
             document.getElementById('editTaskId').value = '';
             document.getElementById('taskNameInput').value = '';
-            document.getElementById('taskRoomInput').value = currentRoom === 'All' ? '' : currentRoom;
+            document.getElementById('taskRoomSelect').value = currentRoom === 'All' ? savedRooms[0] : currentRoom;
             document.getElementById('taskFreqDaysInput').value = '30';
             document.getElementById('taskFreqPreset').value = '30';
             document.getElementById('taskLastCleanedInput').value = todayStr;
             
             if (taskId) {
-                // Edit Mode
                 const task = tasks.find(t => t.id === taskId);
                 if (task) {
                     title.innerText = "Edit Task";
                     document.getElementById('editTaskId').value = task.id;
                     document.getElementById('taskNameInput').value = task.name;
-                    document.getElementById('taskRoomInput').value = task.room;
+                    document.getElementById('taskRoomSelect').value = task.room;
                     document.getElementById('taskFreqDaysInput').value = task.frequency;
                     document.getElementById('taskLastCleanedInput').value = task.lastCleaned;
                     
@@ -725,7 +757,6 @@
                     deleteBtn.style.display = 'block';
                 }
             } else {
-                // Create Mode
                 title.innerText = "Add New Cleaning Task";
                 deleteBtn.style.display = 'none';
             }
@@ -739,9 +770,7 @@
 
         function applyFreqPreset(selectEl) {
             const val = selectEl.value;
-            if (val !== 'custom') {
-                document.getElementById('taskFreqDaysInput').value = val;
-            }
+            if (val !== 'custom') document.getElementById('taskFreqDaysInput').value = val;
         }
 
         function adjustDays(amount) {
@@ -768,7 +797,7 @@
         function saveTask() {
             const editId = document.getElementById('editTaskId').value;
             const name = document.getElementById('taskNameInput').value.trim();
-            const room = document.getElementById('taskRoomInput').value.trim();
+            const room = document.getElementById('taskRoomSelect').value;
             const frequency = parseInt(document.getElementById('taskFreqDaysInput').value) || 30;
             const lastCleaned = document.getElementById('taskLastCleanedInput').value;
             
@@ -779,16 +808,14 @@
             }
 
             if (!name) { alert('Please enter a task name.'); return; }
-            if (!room) { alert('Please enter or select a zone.'); return; }
+            if (!room) { alert('Please select a zone.'); return; }
 
             if (editId) {
-                // Update existing
                 const taskIndex = tasks.findIndex(t => t.id === editId);
                 if (taskIndex > -1) {
                     tasks[taskIndex] = { ...tasks[taskIndex], name, room, frequency, frequencyLabel, lastCleaned };
                 }
             } else {
-                // Create new
                 tasks.push({
                     id: 'task_' + Date.now(), name, room, frequency, frequencyLabel, lastCleaned
                 });
